@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Truthlens — تحليل المصداقية</title>
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400..700&family=Tajawal:wght@300;400;500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14181f; --ink-2:#1d232c; --paper:#efe8d8; --paper-2:#e6ddc8;
+    --line:#8b8272; --verified:#3f7d5c; --flagged:#b23a2e; --caution:#c08a2e;
+    --gold:#b8935a; --text-dark:#25211a; --text-muted:#6b6656;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--ink);
+    background-image:
+      radial-gradient(ellipse at top left, rgba(184,147,90,0.08), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(63,125,92,0.06), transparent 55%);
+    color:var(--paper); font-family:'Tajawal', sans-serif; min-height:100vh; padding:32px 16px 80px;
+  }
+  .wrap{max-width:820px; margin:0 auto;}
+
+  header{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; padding:0 6px;}
+  .brand{display:flex; align-items:center; gap:10px; font-family:'Reem Kufi', sans-serif; font-size:16px;}
+  .brand img{width:28px; height:28px; border-radius:7px;}
+  .quota-badge{
+    font-family:'IBM Plex Sans Arabic', sans-serif; font-size:12.5px; color:#c9c2ae;
+    background:var(--ink-2); border:1px solid #2a323e; padding:6px 14px; border-radius:20px;
+  }
+
+  .gate{
+    background:var(--paper); border-radius:6px 18px 18px 18px; padding:40px 30px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.6); text-align:center;
+  }
+  .gate h1{font-family:'Reem Kufi', sans-serif; font-size:24px; color:var(--text-dark); margin:0 0 10px;}
+  .gate p{font-family:'IBM Plex Sans Arabic', sans-serif; font-size:14px; color:var(--text-muted); margin:0 0 24px; line-height:1.8;}
+  .gate input{
+    width:100%; max-width:340px; padding:13px 16px; border-radius:8px; border:1.5px solid var(--line);
+    font-family:'IBM Plex Sans Arabic', sans-serif; font-size:15px; text-align:center; letter-spacing:1px;
+    background:#fbf8f0; color:var(--text-dark);
+  }
+  .gate button{
+    margin-top:14px; font-family:'IBM Plex Sans Arabic', sans-serif; font-weight:600; font-size:15px;
+    background:var(--ink); color:var(--paper); border:none; padding:13px 30px; border-radius:8px; cursor:pointer;
+  }
+  .gate .error{color:var(--flagged); font-size:13px; margin-top:10px; font-family:'IBM Plex Sans Arabic', sans-serif; display:none;}
+  .gate .error.show{display:block;}
+  .gate .buy-link{display:block; margin-top:18px; font-size:13px; color:var(--gold); font-family:'IBM Plex Sans Arabic', sans-serif;}
+
+  .dossier{background:var(--paper); border-radius:4px 16px 16px 16px; box-shadow:0 30px 60px -20px rgba(0,0,0,0.6); overflow:hidden; position:relative;}
+  .dossier::before{content:""; position:absolute; top:0; right:0; left:0; height:6px; background:repeating-linear-gradient(90deg, var(--gold) 0 14px, transparent 14px 28px); opacity:0.5;}
+  .dossier-inner{padding:34px 30px 30px;}
+  h1.title{font-family:'Reem Kufi', sans-serif; font-size:clamp(26px, 5vw, 34px); color:var(--text-dark); margin:6px 0 6px; line-height:1.3;}
+  .subtitle{font-family:'IBM Plex Sans Arabic', sans-serif; color:var(--text-muted); font-size:14.5px; line-height:1.9; margin:0 0 26px; max-width:56ch;}
+  label.field-label{display:block; font-family:'IBM Plex Sans Arabic', sans-serif; font-size:13px; color:var(--text-muted); margin-bottom:8px;}
+  textarea{width:100%; min-height:150px; resize:vertical; background:#fbf8f0; border:1.5px dashed var(--line); border-radius:10px; padding:16px; font-family:'Tajawal', sans-serif; font-size:15.5px; color:var(--text-dark); line-height:1.8;}
+  textarea:focus{outline:2px solid var(--gold); border-style:solid;}
+  textarea::placeholder{color:#a29c86;}
+  .actions{display:flex; gap:12px; align-items:center; margin-top:16px; flex-wrap:wrap;}
+  button.analyze{font-family:'IBM Plex Sans Arabic', sans-serif; font-weight:600; font-size:15px; background:var(--ink); color:var(--paper); border:none; padding:13px 28px; border-radius:8px; cursor:pointer; transition:transform .15s ease, background .2s ease;}
+  button.analyze:hover{background:#2a323e;}
+  button.analyze:active{transform:scale(0.97);}
+  button.analyze:disabled{opacity:0.6; cursor:progress;}
+  .hint{font-size:12.5px; color:var(--text-muted); font-family:'IBM Plex Sans Arabic', sans-serif;}
+  .loading{display:none; align-items:center; gap:10px; font-family:'IBM Plex Sans Arabic', sans-serif; font-size:13.5px; color:var(--text-muted); margin-top:14px;}
+  .loading.show{display:flex;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--gold); animation:pulse 1s infinite ease-in-out;}
+  .dot:nth-child(2){animation-delay:.15s;} .dot:nth-child(3){animation-delay:.3s;}
+  @keyframes pulse{0%,100%{opacity:.25; transform:scale(.8);}50%{opacity:1; transform:scale(1);}}
+  .report{display:none; margin-top:30px; border-top:2px solid var(--line); padding-top:26px;}
+  .report.show{display:block;}
+  .stamp{display:inline-flex; align-items:center; gap:10px; font-family:'Reem Kufi', sans-serif; font-size:20px; padding:10px 22px; border:3px solid currentColor; border-radius:8px; transform:rotate(-3deg); letter-spacing:1px; animation:stampDown .4s cubic-bezier(.2,1.6,.4,1); margin-bottom:20px;}
+  @keyframes stampDown{0%{opacity:0; transform:rotate(-3deg) scale(2.4);}60%{opacity:1;}100%{opacity:1; transform:rotate(-3deg) scale(1);}}
+  .stamp.verified{color:var(--verified);} .stamp.caution{color:var(--caution);} .stamp.flagged{color:var(--flagged);}
+  .section-title{font-family:'IBM Plex Sans Arabic', sans-serif; font-weight:600; font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin:22px 0 10px;}
+  .reasoning{font-size:15px; line-height:1.9; color:var(--text-dark);}
+  ul.flag-list, ul.check-list{margin:0; padding:0; list-style:none;}
+  ul.flag-list li{display:flex; gap:10px; align-items:flex-start; font-size:14.5px; line-height:1.75; color:var(--text-dark); padding:8px 0; border-bottom:1px dotted #cfc6ac;}
+  ul.flag-list li:last-child{border-bottom:none;}
+  .flag-icon{color:var(--flagged); font-weight:700; flex-shrink:0;}
+  ul.check-list li{display:flex; gap:10px; align-items:flex-start; font-size:14.5px; line-height:1.75; color:var(--text-dark); padding:8px 0;}
+  .check-icon{color:var(--verified); font-weight:700; flex-shrink:0;}
+  .error-box{display:none; background:#fbe9e6; border:1px solid var(--flagged); color:#7a2b22; padding:14px 16px; border-radius:8px; font-size:13.5px; font-family:'IBM Plex Sans Arabic', sans-serif; margin-top:16px; line-height:1.8;}
+  .error-box.show{display:block;}
+  footer.note{max-width:820px; margin:22px auto 0; padding:0 6px; font-family:'IBM Plex Sans Arabic', sans-serif; font-size:12px; color:#9a927c; line-height:1.8;}
+  @media (prefers-reduced-motion: reduce){.stamp{animation:none;} .dot{animation:none;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="gateScreen" class="gate">
+    <h1>أدخل مفتاح الترخيص</h1>
+    <p>ستجد مفتاحك في صفحة التأكيد بعد الشراء. أدخله مرة واحدة فقط — سيُحفظ في متصفحك.</p>
+    <input type="text" id="licenseInput" placeholder="MTQ-XXXX-XXXX-XXXX" autocomplete="off">
+    <br>
+    <button id="verifyBtn">تحقق وادخل</button>
+    <div class="error" id="gateError"></div>
+    <a class="buy-link" href="/">ليس لديك مفتاح؟ اشترِ ترخيصًا من الصفحة الرئيسية</a>
+  </div>
+
+  <div id="appScreen" style="display:none;">
+    <header>
+      <div class="brand"><img src="/logo.svg" alt=""><span>Truthlens</span></div>
+      <div class="quota-badge" id="quotaBadge"></div>
+    </header>
+
+    <div class="dossier">
+      <div class="dossier-inner">
+        <h1 class="title">هل هذا الخبر موثوق؟</h1>
+        <p class="subtitle">الصق نص الخبر أو المنشور أو الادّعاء أدناه. سيقوم المحلل بفحص الصياغة والأدلة الداخلية للنص وإعطائك قراءة أولية، إلى جانب خطوات تحقق يدوية يجب أن تقوم بها بنفسك دائمًا.</p>
+
+        <label class="field-label" for="input">نص الخبر / المنشور / الادّعاء</label>
+        <textarea id="input" placeholder="مثال: انتشر اليوم خبر يفيد بأن... انسخ النص كاملاً هنا"></textarea>
+
+        <div class="actions">
+          <button class="analyze" id="analyzeBtn">افتح التحقيق</button>
+          <span class="hint">تحليل أولي بالذكاء الاصطناعي — ليس حكمًا نهائيًا</span>
+        </div>
+
+        <div class="loading" id="loading">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          <span>جارٍ فحص الأدلة الداخلية للنص...</span>
+        </div>
+
+        <div class="error-box" id="errorBox"></div>
+
+        <div class="report" id="report">
+          <div id="stampArea"></div>
+          <div class="section-title">تقييم عام</div>
+          <div class="reasoning" id="reasoningText"></div>
+          <div class="section-title">إشارات تستدعي الحذر</div>
+          <ul class="flag-list" id="flagList"></ul>
+          <div class="section-title">خطوات تحقق يجب أن تقوم بها بنفسك</div>
+          <ul class="check-list" id="checkList"></ul>
+        </div>
+      </div>
+    </div>
+
+    <footer class="note">
+      ⚠ هذه الأداة تحلّل أسلوب النص وبنيته الداخلية فقط، ولا يمكنها التحقق من وقوع الحدث فعليًا أو تفتيش مصادر خارجية. اعتبرها نقطة بداية للتشكيك، لا حكمًا نهائيًا.
+    </footer>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'maktab_license_key';
+
+const gateScreen = document.getElementById('gateScreen');
+const appScreen = document.getElementById('appScreen');
+const licenseInput = document.getElementById('licenseInput');
+const verifyBtn = document.getElementById('verifyBtn');
+const gateError = document.getElementById('gateError');
+const quotaBadge = document.getElementById('quotaBadge');
+
+async function verifyLicense(key) {
+  const res = await fetch('/api/license/verify', { headers: { 'X-License-Key': key } });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+async function tryEnterApp(key) {
+  const info = await verifyLicense(key);
+  if (info && info.valid) {
+    localStorage.setItem(STORAGE_KEY, key);
+    quotaBadge.textContent = `الحصة: ${info.used} / ${info.quota} هذا الشهر`;
+    gateScreen.style.display = 'none';
+    appScreen.style.display = 'block';
+    return true;
+  }
+  return false;
+}
+
+(async () => {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    const ok = await tryEnterApp(saved);
+    if (!ok) localStorage.removeItem(STORAGE_KEY);
+  }
+})();
+
+verifyBtn.addEventListener('click', async () => {
+  const key = licenseInput.value.trim();
+  gateError.classList.remove('show');
+  if (!key) {
+    gateError.textContent = 'الرجاء إدخال مفتاح الترخيص.';
+    gateError.classList.add('show');
+    return;
+  }
+  verifyBtn.disabled = true;
+  verifyBtn.textContent = 'جارٍ التحقق...';
+  const ok = await tryEnterApp(key);
+  verifyBtn.disabled = false;
+  verifyBtn.textContent = 'تحقق وادخل';
+  if (!ok) {
+    gateError.textContent = 'مفتاح غير صالح. تأكد من نسخه بشكل صحيح.';
+    gateError.classList.add('show');
+  }
+});
+
+const btn = document.getElementById('analyzeBtn');
+const input = document.getElementById('input');
+const loading = document.getElementById('loading');
+const report = document.getElementById('report');
+const errorBox = document.getElementById('errorBox');
+const stampArea = document.getElementById('stampArea');
+const reasoningText = document.getElementById('reasoningText');
+const flagList = document.getElementById('flagList');
+const checkList = document.getElementById('checkList');
+
+const STAMP_MAP = {
+  low: {label:'إشارات تلاعب واضحة', cls:'flagged'},
+  medium: {label:'يحتاج تحقق إضافي', cls:'caution'},
+  high: {label:'لا توجد إشارات تلاعب واضحة', cls:'verified'}
+};
+
+btn.addEventListener('click', async () => {
+  const text = input.value.trim();
+  errorBox.classList.remove('show');
+  report.classList.remove('show');
+
+  if(!text){
+    errorBox.textContent = 'الرجاء لصق نص الخبر أو الادّعاء أولاً.';
+    errorBox.classList.add('show');
+    return;
+  }
+
+  const licenseKey = localStorage.getItem(STORAGE_KEY);
+  btn.disabled = true;
+  loading.classList.add('show');
+
+  try {
+    const response = await fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-License-Key": licenseKey },
+      body: JSON.stringify({ text })
+    });
+
+    const parsed = await response.json();
+
+    if(!response.ok){
+      throw new Error(parsed.error || ("فشل الاتصال بخدمة التحليل (رمز: " + response.status + ")"));
+    }
+
+    if (typeof parsed.remaining_quota === 'number') {
+      quotaBadge.textContent = `الحصة المتبقية هذا الشهر: ${parsed.remaining_quota}`;
+    }
+
+    renderReport(parsed);
+
+  } catch(err){
+    errorBox.textContent = "حدث خطأ أثناء التحليل: " + err.message;
+    errorBox.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    loading.classList.remove('show');
+  }
+});
+
+function renderReport(data){
+  const level = STAMP_MAP[data.confidence_level] || STAMP_MAP.medium;
+  stampArea.innerHTML = `<div class="stamp ${level.cls}">${level.label}</div>`;
+  reasoningText.textContent = data.reasoning || '';
+
+  flagList.innerHTML = '';
+  (data.red_flags || []).forEach(flag => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="flag-icon">⚑</span><span>${escapeHtml(flag)}</span>`;
+    flagList.appendChild(li);
+  });
+
+  checkList.innerHTML = '';
+  (data.verification_steps || []).forEach(step => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="check-icon">✓</span><span>${escapeHtml(step)}</span>`;
+    checkList.appendChild(li);
+  });
+
+  report.classList.add('show');
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>
