@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تم الدفع بنجاح — Truthlens</title>
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400..700&family=Tajawal:wght@300;400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#14181f; --paper:#efe8d8; --verified:#3f7d5c; --gold:#b8935a; --text-dark:#25211a; --text-muted:#6b6656;}
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--ink); color:var(--paper); font-family:'Tajawal', sans-serif; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;}
+  .card{background:var(--paper); color:var(--text-dark); max-width:460px; width:100%; border-radius:6px 20px 20px 20px; padding:40px 32px; text-align:center; box-shadow:0 30px 60px -20px rgba(0,0,0,0.6);}
+  .check{font-size:40px; color:var(--verified); margin-bottom:10px;}
+  h1{font-family:'Reem Kufi', sans-serif; font-size:24px; margin:0 0 8px;}
+  p{font-family:'IBM Plex Sans Arabic', sans-serif; font-size:14px; color:var(--text-muted); line-height:1.8; margin:0 0 22px;}
+  .key-box{
+    background:#fbf8f0; border:1.5px dashed var(--gold); border-radius:10px; padding:16px;
+    font-family:'IBM Plex Sans Arabic', sans-serif; font-size:18px; letter-spacing:1.5px; margin-bottom:16px; word-break:break-all;
+  }
+  button, a.go{
+    display:inline-block; font-family:'IBM Plex Sans Arabic', sans-serif; font-weight:600; font-size:14.5px;
+    background:var(--ink); color:var(--paper); border:none; padding:12px 22px; border-radius:8px; cursor:pointer; text-decoration:none; margin:4px;
+  }
+  .warn{font-size:12.5px; color:#a5452f; margin-top:14px; font-family:'IBM Plex Sans Arabic', sans-serif;}
+  .pending{font-family:'IBM Plex Sans Arabic', sans-serif; font-size:14px; color:var(--text-muted);}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="check">✓</div>
+  <h1>تم الدفع بنجاح</h1>
+  <div id="content">
+    <p class="pending">جارٍ إصدار مفتاح ترخيصك...</p>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const sessionId = params.get('session_id');
+const content = document.getElementById('content');
+
+async function pollForKey(attempt = 0) {
+  if (!sessionId) {
+    content.innerHTML = '<p>لم يتم العثور على معرف الجلسة. إذا أتممت الدفع بالفعل، تواصل معنا للحصول على مفتاحك.</p>';
+    return;
+  }
+  if (attempt > 12) {
+    content.innerHTML = '<p>الدفع تم، لكن يستغرق إصدار المفتاح وقتًا أطول من المعتاد. حدّث الصفحة بعد لحظات أو تواصل معنا.</p>';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/checkout/session/' + encodeURIComponent(sessionId));
+    if (res.status === 202) {
+      setTimeout(() => pollForKey(attempt + 1), 1500);
+      return;
+    }
+    const data = await res.json();
+    if (data.licenseKey) {
+      content.innerHTML = `
+        <p>احفظ هذا المفتاح جيدًا — ستحتاجه لفتح التطبيق:</p>
+        <div class="key-box" id="keyBox">${data.licenseKey}</div>
+        <button id="copyBtn">نسخ المفتاح</button>
+        <a class="go" href="/app">افتح التطبيق الآن</a>
+        <div class="warn">لن يظهر هذا المفتاح مرة أخرى في هذه الصفحة — احفظه في مكان آمن.</div>
+      `;
+      document.getElementById('copyBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(data.licenseKey);
+        document.getElementById('copyBtn').textContent = 'تم النسخ ✓';
+      });
+    } else {
+      setTimeout(() => pollForKey(attempt + 1), 1500);
+    }
+  } catch (e) {
+    setTimeout(() => pollForKey(attempt + 1), 1500);
+  }
+}
+
+pollForKey();
+</script>
+</body>
+</html>
