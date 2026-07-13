@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Truthlens — اعرف متى تشك في خبر</title>
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400..700&family=Tajawal:wght@300;400;500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14181f; --ink-2:#1d232c; --paper:#efe8d8; --paper-2:#e6ddc8;
+    --line:#8b8272; --verified:#3f7d5c; --flagged:#b23a2e; --caution:#c08a2e;
+    --gold:#b8935a; --text-dark:#25211a; --text-muted:#6b6656;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--ink); color:var(--paper);
+    font-family:'Tajawal', sans-serif;
+    background-image:
+      radial-gradient(ellipse at top left, rgba(184,147,90,0.08), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(63,125,92,0.06), transparent 55%);
+  }
+  .container{max-width:960px; margin:0 auto; padding:0 20px;}
+
+  nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px 0;
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-family:'Reem Kufi', sans-serif; font-size:18px;}
+  .brand img{width:34px; height:34px; border-radius:8px;}
+  nav a.cta-small{
+    font-family:'IBM Plex Sans Arabic', sans-serif; font-size:14px; font-weight:600;
+    color:var(--ink); background:var(--paper); padding:9px 18px; border-radius:8px;
+    text-decoration:none;
+  }
+
+  .hero{padding:60px 0 40px; text-align:center;}
+  .eyebrow{
+    font-family:'IBM Plex Sans Arabic', sans-serif; font-size:13px; color:var(--gold);
+    letter-spacing:1.5px; margin-bottom:14px;
+  }
+  h1{
+    font-family:'Reem Kufi', sans-serif; font-size:clamp(32px, 6vw, 52px);
+    line-height:1.35; margin:0 0 18px; color:var(--paper);
+  }
+  .hero p.sub{
+    max-width:52ch; margin:0 auto 30px; color:#c9c2ae; font-size:17px; line-height:1.9;
+  }
+  .hero-actions{display:flex; gap:14px; justify-content:center; flex-wrap:wrap;}
+  .btn-primary{
+    font-family:'IBM Plex Sans Arabic', sans-serif; font-weight:700; font-size:16px;
+    background:var(--gold); color:var(--ink); border:none; padding:16px 34px;
+    border-radius:10px; text-decoration:none; display:inline-block;
+    transition:transform .15s ease;
+  }
+  .btn-primary:hover{transform:translateY(-2px);}
+  .btn-secondary{
+    font-family:'IBM Plex Sans Arabic', sans-serif; font-weight:600; font-size:15px;
+    background:transparent; color:var(--paper); border:1.5px solid #4a5260; padding:15px 26px;
+    border-radius:10px; text-decoration:none; display:inline-block;
+  }
+  .price-note{margin-top:12px; font-size:13px; color:#9a927c; font-family:'IBM Plex Sans Arabic', sans-serif;}
+
+  .demo{
+    max-width:520px; margin:50px auto 0; background:var(--paper); border-radius:6px 18px 18px 18px;
+    padding:26px 24px; text-align:right; color:var(--text-dark);
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.6);
+  }
+  .stamp-demo{
+    display:inline-flex; font-family:'Reem Kufi', sans-serif; font-size:16px; color:var(--flagged);
+    border:2px solid currentColor; border-radius:6px; padding:6px 14px; transform:rotate(-3deg); margin-bottom:14px;
+  }
+  .demo-line{font-size:14px; line-height:1.8; color:var(--text-muted); border-bottom:1px dotted #cfc6ac; padding:7px 0;}
+
+  section{padding:60px 0;}
+  .section-title{
+    font-family:'Reem Kufi', sans-serif; font-size:clamp(24px,4vw,30px); text-align:center; margin-bottom:44px; color:var(--paper);
+  }
+  .grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:20px;}
+  .card{
+    background:var(--ink-2); border:1px solid #2a323e; border-radius:12px; padding:24px;
+  }
+  .card .icon{font-size:22px; color:var(--gold); margin-bottom:10px;}
+  .card h3{font-family:'IBM Plex Sans Arabic', sans-serif; font-size:16px; margin:0 0 8px; color:var(--paper);}
+  .card p{font-size:14px; line-height:1.8; color:#a8a08c; margin:0;}
+
+  .steps{counter-reset:step; display:flex; flex-direction:column; gap:20px; max-width:640px; margin:0 auto;}
+  .step{display:flex; gap:16px; align-items:flex-start;}
+  .step-num{
+    counter-increment:step; font-family:'Reem Kufi', sans-serif; font-size:14px;
+    background:var(--gold); color:var(--ink); width:32px; height:32px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .step-num::before{content: counter(step);}
+  .step p{margin:0; font-size:15px; line-height:1.8; color:#c9c2ae;}
+  .step strong{color:var(--paper); font-family:'IBM Plex Sans Arabic', sans-serif;}
+
+  .price-card{
+    max-width:400px; margin:0 auto; background:var(--paper); color:var(--text-dark);
+    border-radius:6px 20px 20px 20px; padding:36px 30px; text-align:center;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.6);
+  }
+  .price-amount{font-family:'Reem Kufi', sans-serif; font-size:44px; margin:6px 0;}
+  .price-amount span{font-size:16px; font-family:'IBM Plex Sans Arabic', sans-serif; color:var(--text-muted);}
+  .price-list{list-style:none; padding:0; margin:22px 0; text-align:right;}
+  .price-list li{padding:8px 0; font-size:14.5px; border-bottom:1px dotted #cfc6ac; display:flex; gap:8px;}
+  .price-list li:last-child{border-bottom:none;}
+  .price-list .ok{color:var(--verified); font-weight:700;}
+  .price-card .btn-primary{width:100%; text-align:center; margin-top:10px;}
+
+  .limits{
+    background:#241c14; border:1px solid #4a3a24; border-radius:12px; padding:24px 26px;
+    max-width:640px; margin:0 auto; font-family:'IBM Plex Sans Arabic', sans-serif; font-size:14px;
+    line-height:1.9; color:#d9c9a8;
+  }
+  .limits strong{color:var(--gold);}
+
+  footer{padding:40px 0 60px; text-align:center; font-size:13px; color:#8a8370; font-family:'IBM Plex Sans Arabic', sans-serif;}
+</style>
+</head>
+<body>
+<div class="container">
+  <nav>
+    <div class="brand"><img src="/logo.svg" alt=""><span>Truthlens</span></div>
+    <a class="cta-small" href="/app">لديك مفتاح؟ افتح التطبيق</a>
+  </nav>
+
+  <section class="hero">
+    <div class="eyebrow">أداة تحليل مصداقية بالذكاء الاصطناعي</div>
+    <h1>قبل أن تُصدّق أو تشارك...<br>اسأل Truthlens أولاً</h1>
+    <p class="sub">الصق أي خبر أو منشور، واحصل خلال ثوانٍ على تحليل لعلامات التلاعب والمبالغة في النص، مع خطوات عملية للتحقق بنفسك.</p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="/api/checkout" id="buyBtn">اشترِ الآن</a>
+      <a class="btn-secondary" href="#pricing">التفاصيل والسعر</a>
+    </div>
+    <div class="price-note" id="priceNote"></div>
+  </section>
+
+  <div class="demo">
+    <div class="stamp-demo">يحتاج تحقق إضافي</div>
+    <div class="demo-line">⚑ لغة عاطفية مبالغ فيها في العنوان</div>
+    <div class="demo-line">⚑ لا يوجد ذكر لمصدر أو جهة رسمية</div>
+    <div class="demo-line">✓ ابحث عن الخبر في وكالات أنباء موثوقة</div>
+  </div>
+
+  <section>
+    <div class="section-title">ماذا يقدّم لك؟</div>
+    <div class="grid">
+      <div class="card"><div class="icon">⚡</div><h3>تحليل فوري</h3><p>نتيجة خلال ثوانٍ لأي نص تلصقه، بدون تسجيل معقد.</p></div>
+      <div class="card"><div class="icon">🔍</div><h3>كشف أسلوبي</h3><p>يرصد اللغة التحريضية، المبالغة، وغياب المصادر داخل النص.</p></div>
+      <div class="card"><div class="icon">🧭</div><h3>خطوات تحقق عملية</h3><p>لا يكتفي بالحكم، بل يعطيك خطوات فعلية للتأكد بنفسك.</p></div>
+      <div class="card"><div class="icon">🔒</div><h3>خصوصية</h3><p>النصوص تُرسل للتحليل فقط ولا تُخزَّن أو تُستخدم لأي غرض آخر.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-title">كيف يعمل؟</div>
+    <div class="steps">
+      <div class="step"><div class="step-num"></div><p><strong>اشترِ ترخيصًا</strong> — دفعة واحدة، تحصل على مفتاح ترخيص فوري.</p></div>
+      <div class="step"><div class="step-num"></div><p><strong>افتح التطبيق</strong> وأدخل مفتاحك مرة واحدة فقط.</p></div>
+      <div class="step"><div class="step-num"></div><p><strong>الصق أي نص</strong> واحصل على تقرير التحليل وخطوات التحقق فورًا.</p></div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="section-title">السعر</div>
+    <div class="price-card">
+      <div>ترخيص كامل</div>
+      <div class="price-amount" id="priceAmount">—</div>
+      <ul class="price-list">
+        <li><span class="ok">✓</span> تحليلات شهرية ضمن الحصة المتاحة</li>
+        <li><span class="ok">✓</span> دفعة واحدة، بدون اشتراك متكرر</li>
+        <li><span class="ok">✓</span> تحديثات مستقبلية للأداة</li>
+      </ul>
+      <a class="btn-primary" href="/api/checkout">اشترِ الآن</a>
+    </div>
+  </section>
+
+  <section>
+    <div class="limits">
+      <strong>بصراحة تامة:</strong> هذه الأداة تحلّل أسلوب النص وصياغته فقط (لغة عاطفية، ادعاءات غير قابلة للتحقق، غياب مصادر...). إنها <strong>لا</strong> تتحقق من وقوع الحدث فعليًا ولا تفتش الإنترنت بحثًا عن مصادر خارجية. اعتبرها نقطة انطلاق للتشكيك، وليست حكمًا نهائيًا — التحقق الحقيقي يبقى دائمًا عبر مصادر موثوقة متعددة.
+    </div>
+  </section>
+
+  <footer>Truthlens © <span id="year"></span></footer>
+</div>
+
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+fetch('/api/price').then(r => r.json()).then(data => {
+  const amountEl = document.getElementById('priceAmount');
+  const noteEl = document.getElementById('priceNote');
+  if (data.configured && typeof data.amount === 'number') {
+    const value = (data.amount / 100).toFixed(2);
+    amountEl.innerHTML = value + ' <span>' + data.currency.toUpperCase() + '</span>';
+    noteEl.textContent = 'دفعة واحدة — بدون اشتراك متكرر';
+  } else {
+    amountEl.innerHTML = '<span style="font-size:16px;">السعر غير مُعدّ بعد</span>';
+    noteEl.textContent = '';
+  }
+}).catch(() => {
+  document.getElementById('priceAmount').innerHTML = '<span style="font-size:16px;">تعذّر تحميل السعر</span>';
+});
+</script>
+</body>
+</html>
